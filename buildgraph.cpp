@@ -3,8 +3,9 @@
 #include <string.h>
 #include "regex.h"
 #include <time.h>
-//#include <unistd.h>
-#include <Windows.h>
+#include <unistd.h>
+#include <dirent.h>
+//#include <Windows.h>
 #include <iostream>
 
 using namespace std;
@@ -48,13 +49,58 @@ int strcmp(char* str, int start, int end) {
 	return 1;
 }
 
+int readFileList(char *basePath,FILE* outfile)
+{
+    DIR *dir;
+    struct dirent *ptr;
+    char base[1000];
+
+    if ((dir=opendir(basePath)) == NULL)
+    {
+        perror("Open dir error...");
+        exit(1);
+    }
+
+    while ((ptr=readdir(dir)) != NULL)
+    {
+        if(strcmp(ptr->d_name,".")==0 || strcmp(ptr->d_name,"..")==0)    ///current dir OR parrent dir
+            continue;
+        else if(ptr->d_type == 8)    ///file
+            fprintf(outfile,"%s/%s\n",basePath,ptr->d_name);
+        else if(ptr->d_type == 10)    ///link file
+            fprintf(outfile,"%s/%s\n",basePath,ptr->d_name);
+        else if(ptr->d_type == 4)    ///dir
+        {
+            memset(base,'\0',sizeof(base));
+            strcpy(base,basePath);
+            strcat(base,"/");
+            strcat(base,ptr->d_name);
+            readFileList(base,outfile);
+        }
+    }
+    closedir(dir);
+    return 1;
+}
+
+
 int main() {
 	clock_t begin_time, end_time;
 	begin_time = clock();
 	double cost_time;
+    char basePath[300];
 
-	system("DIR /D news.sohu.com /b /s /a:a > dir.txt");
-	FILE* dir_file;
+    FILE* dir_file;
+    dir_file = fopen("dir.txt","w");
+    ///get the current absoulte path
+    memset(basePath,'\0',sizeof(basePath));
+    getcwd(basePath, 299);
+    printf("the current dir is : %s\n",basePath);
+
+    ///get the file list
+    memset(basePath,'\0',sizeof(basePath));
+    strcpy(basePath,"./news.sohu.com");
+    readFileList(basePath,dir_file);
+
 	FILE* web_url;
 	char dir[300];
 	char url[300];
@@ -62,22 +108,18 @@ int main() {
 	int url_offset;
 	int hash;
 	Hash_node* temp;
-	fopen_s(&dir_file, "dir.txt", "r");
-	fopen_s(&web_url, "web.txt", "w");
+	fclose(dir_file);
+	dir_file = fopen("dir.txt", "r");
+	web_url = fopen("web.txt", "w");
 	int url_id = 0;
 	fgets(dir, 300, dir_file);
 	url_offset = strstr(dir, "news.sohu.com") - dir;
 	cout << "url_offset:" << url_offset << endl;
 	do {
-		strcpy_s(url, strlen(dir + url_offset) + 1, dir + url_offset);
+		strcpy(url, dir + url_offset);
 		length = strlen(url);
 		if (!(url[length - 2] == 'l' && url[length - 3] == 'm' && url[length - 4] == 't' && url[length - 5] == 'h')) {
 			continue;
-		}
-		for (int i = 0; i < length; i++) {
-			if (url[i] == '\\') {
-				url[i] = '/';
-			}
 		}
 		url[length - 1] = '\0';
 		hash = ELFHash(url, 0, length - 1) % HASHTABLE_SIZE;
@@ -85,7 +127,7 @@ int main() {
 			temp = (Hash_node*)malloc(sizeof(Hash_node));
 			temp->next = NULL;
 			temp->url = (char*)malloc(length);
-			strcpy_s(temp->url, length, url);
+			strcpy(temp->url, url);
 			temp->url_id = url_id;
 			hash_table[hash] = temp;
 		}
@@ -98,7 +140,7 @@ int main() {
 			temp = temp->next;
 			temp->next = NULL;
 			temp->url = (char*)malloc(length);
-			strcpy_s(temp->url, length, url);
+			strcpy(temp->url, url);
 			temp->url_id = url_id;
 		}
 		fprintf(web_url, "%s\n", url);
@@ -107,14 +149,13 @@ int main() {
 	fclose(dir_file);
 	fclose(web_url);
 
-	fopen_s(&web_url, "web.txt", "r");
+	web_url = fopen("web.txt", "r");
 	FILE* outfile;
 	FILE* infile;
 	int html_length;
-	//char destination[300];
-	fopen_s(&outfile, "graph.bin", "w");
+	outfile = fopen("graph.bin", "w");
 	regex_t reg;
-	regcomp(&reg, "news.sohu.com([A-Za-z0-9\\-\\_\\%\\[\\&\\?\\/\\=\\.]+)", REG_EXTENDED);
+	regcomp(&reg, "news.sohu.com([\\-|A-Za-z0-9\\(\\)\\ \\_\\/\\[\\-]+).([Ss]?html)", REG_EXTENDED);
 	regmatch_t pm[2];
 	const size_t nmatch = 2;
 	url_id = 0;
@@ -124,7 +165,7 @@ int main() {
 			cout << n << endl;
 		}
 		url[strlen(url) - 1] = '\0';
-		if (!fopen_s(&infile, url, "r")) {
+		if (infile = fopen(url, "rb")) {
 			fseek(infile, 0L, SEEK_END);
 			html_length = ftell(infile);
 			fseek(infile, 0L, 0);
@@ -134,14 +175,6 @@ int main() {
 			fclose(infile);
 			p = html;
 			while (!regexec(&reg, p, nmatch, pm, REG_EXTENDED)) {
-				/*strncpy(destination, p + pm[0].rm_so, pm[0].rm_eo - pm[0].rm_so);
-				destination[pm[0].rm_eo - pm[0].rm_so] = '\n';
-				destination[pm[0].rm_eo - pm[0].rm_so + 1] = '\0';*/
-				//cout << destination;
-				if (!(p[pm[0].rm_eo - 1] == 'l' && p[pm[0].rm_eo - 2] == 'm' && p[pm[0].rm_eo - 3] == 't' && p[pm[0].rm_eo - 4] == 'h')) {
-					p += pm[0].rm_eo;
-					continue;
-				}
 				hash = ELFHash(p, pm[0].rm_so, pm[0].rm_eo) % HASHTABLE_SIZE;
 				temp = hash_table[hash];
 				while (temp != NULL) {
@@ -160,6 +193,6 @@ int main() {
 
 	end_time = clock();
 	cost_time = (double)(end_time - begin_time) / CLOCKS_PER_SEC;
-	printf("{runtime: %lf}", cost_time);
+	printf("{runtime: %lfs}", cost_time);
 	return 0;
 }

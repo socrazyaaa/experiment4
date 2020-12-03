@@ -193,5 +193,6 @@ int main() {
 	end_time = clock();
 	cost_time = (double)(end_time - begin_time) / CLOCKS_PER_SEC;
 	printf("{runtime: %lfs ,node_num: %d,edge_num: %d}", cost_time, node_num, edge_num);
+	sleep(3);
 	return 0;
 }

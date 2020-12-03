@@ -4,7 +4,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#define queue_size 10000000
+#define queue_size 100000
 
 struct Matrix {
 	int col;
@@ -72,19 +72,19 @@ int main() {
 	FILE* outfile;
 	char str[260];
 	int length;
-	fopen_s(&infile, "web.txt", "r");
+	infile = fopen("web.txt", "r");
 	while (fgets(str, 260, infile)) {
 		length = strlen(str);
 		str[length - 1] = '\0';
 		url[url_num] = (char*)malloc(length);
-		strcpy_s(url[url_num++], length, str);
+		strcpy(url[url_num++], str);
 	}
 	fclose(infile);
-	fopen_s(&infile, "graph.bin", "r");
+	infile = fopen("graph.bin", "r");
 	int source, destination;
 	memset(url_edge_start, -1, sizeof(url_edge_start));
 	int num = -1;
-	while (fscanf_s(infile, "%d %d\n", &source, &destination) != EOF) {
+	while (fscanf(infile, "%d %d\n", &source, &destination) != EOF) {
 		matrix[Matrix_num].col = source;
 		if (num != source) {
 			num = source;
@@ -95,6 +95,9 @@ int main() {
 
 	memset(pass_path_num, 0, sizeof(pass_path_num));
 	for (int i = 0; i < url_num; i++) {
+        if(i%1000 == 0){
+            printf("%d\n",i);
+        }
 		memset(distances, -1, sizeof(distances));
 		memset(pre, -1, sizeof(pre));
 		int front = 0;
@@ -125,7 +128,7 @@ int main() {
 	}
 	FindTop();
 	fclose(infile);
-	fopen_s(&outfile, "result.txt", "w");
+	outfile = fopen( "result.txt", "w");
 	for (int i = 0; i < 20; i++) {
 		fprintf(outfile, "%s %.16lf\n", url[top_id[i]], top_centrality[i]);
 	}

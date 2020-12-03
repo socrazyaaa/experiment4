@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
-//#include <unistd.h>
-#include <Windows.h>
+#include <unistd.h>
+#include <string.h>
 #include <iostream>
 
 using namespace std;
@@ -60,17 +60,17 @@ int main() {
 	FILE* outfile;
 	char str[260];
 	int length;
-	fopen_s(&infile, "web.txt", "r");
+	infile = fopen("web.txt", "r");
 	while (fgets(str, 260, infile)) {
 		length = strlen(str);
 		str[length - 1] = '\0';
 		url[url_num] = (char*)malloc(length);
-		strcpy_s(url[url_num++], length, str);
+		strcpy(url[url_num++], str);
 	}
 	fclose(infile);
-	fopen_s(&infile, "graph.bin", "r");
+	infile = fopen("graph.bin", "r");
 	int source, destination;
-	while (fscanf_s(infile, "%d %d\n", &source, &destination) != EOF) {
+	while (fscanf(infile, "%d %d\n", &source, &destination) != EOF) {
 		OutNum[source]++;
 		matrix[Matrix_num].col = source;
 		matrix[Matrix_num++].row = destination;
@@ -107,14 +107,14 @@ int main() {
 	}
 	FindTop();
 	fclose(infile);
-	fopen_s(&outfile, "result.txt", "w");
+	outfile = fopen("result.txt", "w");
 	for (int i = 0; i < 20; i++) {
 		fprintf(outfile, "%s %.16lf\n", url[top_id[i]], top_PageRank[i]);
 	}
 
 	end_time = clock();
 	cost_time = (double)(end_time - begin_time) / CLOCKS_PER_SEC;
-	printf("{runtime: %lfs, iter_num: %d\n}", cost_time, iter_num);
+	printf("{runtime: %lfs, iter_num: %d}", cost_time, iter_num);
 	sleep(3);
 	return 0;
 }

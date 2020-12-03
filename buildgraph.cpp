@@ -166,8 +166,8 @@ int main() {
 			fseek(infile, 0L, SEEK_END);
 			html_length = ftell(infile);
 			fseek(infile, 0L, 0);
-			free(html);
-			html = (char*)malloc(html_length);
+            free(html);
+            html = (char*)malloc(html_length);
 			fread(html, 1, html_length, infile);
 			fclose(infile);
 			p = html;

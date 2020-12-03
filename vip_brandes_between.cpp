@@ -95,9 +95,7 @@ int main() {
 	}
 	printf("finish read\n");
 
-	for (int i = 0; i < 143667; i++) {
-		centrality[i] = 0.0;
-	}
+	memset(centrality, 0, sizeof(centrality));
 	for (int j = 0; j < 143667; j++) {
 		pred[j].max_length = 10;
 		pred[j].value = (int*)malloc(sizeof(int) * 10);
@@ -111,10 +109,8 @@ int main() {
 			pred[j].num= 0;
 		}
 		int front = 0, last = 0;
-		for (int j = 0; j < url_num; j++) {
-			sigma[j] = 0;
-			distances[j] = -1;
-		}
+		memset(sigma, 0, sizeof(sigma));
+		memset(distances, -1, sizeof(distances));
 		sigma[i] = 1;
 		distances[i] = 0;
 		queue[last++] = i;

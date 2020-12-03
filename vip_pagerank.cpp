@@ -92,30 +92,7 @@ int main() {
 		pagerank[i] = 1.0;
 	}
 	double delta = 1;
-	while (delta > precision * precision) {
-		iter_num++;
-		sum = 0;
-		for (int i = 0; i < url_num; i++) {
-			pagerank_last[i] = pagerank[i];
-			pagerank[i] = 0;
-			sum += pagerank_last[i];
-		}
-		for (int i = 0; i < Matrix_num; i++) {
-			pagerank[matrix[i].row] += pagerank_last[matrix[i].col] / OutNum[matrix[i].col];
-		}
-		for (int i = 0; i < url_num; i++) {
-			pagerank[i] = 0.85 * pagerank[i];
-		}
-		for (int i = 0; i < url_num; i++) {
-			pagerank[i] += sum * 0.15 / url_num;
-		}
-		delta = 0;
-		for (int i = 0; i < url_num; i++) {
-			delta += (pagerank_last[i] - pagerank[i]) * (pagerank_last[i] - pagerank[i]);
-		}
-		printf("%lf\n", delta);
-	}
-	/*while (1) {
+	while (1) {
 		iter_num++;
 		int j = 0;
 		delta = 0.0;
@@ -139,7 +116,7 @@ int main() {
 		if (delta <= precision * precision) {
 			break;
 		}
-	}*/
+	}
 	printf("iter_num=%d\n", iter_num);
 	/*while (x > precision * precision) {
 		iter_num++;

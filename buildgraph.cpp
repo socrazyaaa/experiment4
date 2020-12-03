@@ -5,10 +5,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <dirent.h>
-//#include <Windows.h>
-#include <iostream>
-
-using namespace std;
 
 #define HASHTABLE_SIZE 1000
 
@@ -107,6 +103,8 @@ int main() {
 	int length;
 	int url_offset;
 	int hash;
+	int node_num = 0;
+	int edge_num = 0;
 	Hash_node* temp;
 	fclose(dir_file);
 	dir_file = fopen("dir.txt", "r");
@@ -114,7 +112,6 @@ int main() {
 	int url_id = 0;
 	fgets(dir, 300, dir_file);
 	url_offset = strstr(dir, "news.sohu.com") - dir;
-	cout << "url_offset:" << url_offset << endl;
 	do {
 		strcpy(url, dir + url_offset);
 		length = strlen(url);
@@ -160,17 +157,17 @@ int main() {
 	const size_t nmatch = 2;
 	url_id = 0;
 	int n = 0;
+	int pre_length = 1;
 	while (fgets(url, 300, web_url)) {
-		if (n++ % 1000 == 0) {
-			cout << n << endl;
-		}
 		url[strlen(url) - 1] = '\0';
 		if (infile = fopen(url, "rb")) {
 			fseek(infile, 0L, SEEK_END);
 			html_length = ftell(infile);
 			fseek(infile, 0L, 0);
-			free(html);
-			html = (char*)malloc(html_length);
+			if (pre_length < html_length) {
+				html = (char*)realloc(html, html_length);
+				pre_length = html_length;
+			}
 			fread(html, 1, html_length, infile);
 			fclose(infile);
 			p = html;
@@ -180,6 +177,7 @@ int main() {
 				while (temp != NULL) {
 					if (strcmp(temp->url, pm[0].rm_so, pm[0].rm_eo)) {
 						fprintf(outfile, "%d %d\n", url_id, temp->url_id);
+						edge_num++;
 						break;
 					}
 					temp = temp->next;
@@ -190,9 +188,11 @@ int main() {
 		url_id++;
 	}
 	regfree(&reg);
+	node_num = url_id;
 
 	end_time = clock();
 	cost_time = (double)(end_time - begin_time) / CLOCKS_PER_SEC;
-	printf("{runtime: %lfs}", cost_time);
+	printf("{runtime: %lfs, node_num: %d, edge_num:%d\n}", cost_time, node_num, edge_num);
+	sleep(3);
 	return 0;
 }

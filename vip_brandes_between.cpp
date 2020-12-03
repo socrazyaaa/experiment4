@@ -2,11 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-//#include <unistd.h>
-#include <Windows.h>
-#include <iostream>
+#include <unistd.h>
 
-using namespace std;
 #define stack_size 500000
 #define queue_size 500000
 
@@ -24,8 +21,6 @@ struct Pred pred[143667];
 
 int url_num = 0;
 char* url[143667];//url
-int OutNum[143667];//出度
-int InNum[143667];//入度
 int Matrix_num = 0;//稀疏矩阵非零元素个数
 double centrality[143667];
 int queue[queue_size];
@@ -84,8 +79,6 @@ int main() {
 	}
 	int num = -1;
 	while (fscanf_s(infile, "%d %d\n", &source, &destination) != EOF) {
-		OutNum[source]++;
-		InNum[destination]++;
 		matrix[Matrix_num].col = source;
 		if (num != source) {
 			num = source;
@@ -93,7 +86,6 @@ int main() {
 		}
 		matrix[Matrix_num++].row = destination;
 	}
-	printf("finish read\n");
 
 	memset(centrality, 0, sizeof(centrality));
 	for (int j = 0; j < 143667; j++) {
@@ -101,9 +93,6 @@ int main() {
 		pred[j].value = (int*)malloc(sizeof(int) * 10);
 	}
 	for (int i = 0; i < url_num; i++) {
-		if (i % 1000 == 0) {
-			cout << i << endl;
-		}
 		int top = -1;
 		for (int j = 0; j < 143667; j++) {
 			pred[j].num= 0;
@@ -118,7 +107,7 @@ int main() {
 		while (last != front) {
 			stack[++top] = queue[front++];
 			if (top > stack_size) {
-				cout << "stack is not enough" << endl;
+				printf("stack is not enough\n");
 			}
 			front %= queue_size;
 			for (int j = url_edge_start[stack[top]]; j < Matrix_num && matrix[j].col == stack[top]; j++) {
@@ -126,7 +115,7 @@ int main() {
 					queue[last++] = matrix[j].row;
 					last %= queue_size;
 					if (last == front) {
-						cout << "queue is not enough" << endl;
+						printf("queue is not enough\n");
 					}
 					distances[matrix[j].row] = distances[stack[top]] + 1;
 				}
@@ -163,6 +152,7 @@ int main() {
 
 	end_time = clock();
 	cost_time = (double)(end_time - begin_time) / CLOCKS_PER_SEC;
-	printf("{runtime: %lf}", cost_time);
+	printf("{runtime: %lfs}", cost_time);
+	sleep(3);
 	return 0;
 }

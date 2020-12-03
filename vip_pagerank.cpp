@@ -17,7 +17,6 @@ struct Matrix matrix[2800000];
 int url_num = 0;
 char* url[143667];//url
 int OutNum[143667];//出度
-int InNum[143667];//入度
 int Matrix_num = 0;//稀疏矩阵非零元素个数
 double pagerank[143667];//特征向量
 double pagerank_last[143667];
@@ -73,18 +72,10 @@ int main() {
 	int source, destination;
 	while (fscanf_s(infile, "%d %d\n", &source, &destination) != EOF) {
 		OutNum[source]++;
-		InNum[destination]++;
 		matrix[Matrix_num].col = source;
 		matrix[Matrix_num++].row = destination;
 	}
-	printf("finish read\n");
 	qsort(matrix, Matrix_num, sizeof(Matrix), cmp);
-	printf("sort finished\n");
-	FILE* mat;
-	fopen_s(&mat, "matrix.txt", "w");
-	for (int i = 0; i < Matrix_num; i++) {
-		fprintf(mat, "%d %d\n", matrix[i].col, matrix[i].row);
-	}
 	double precision = 0.0001;//精度
 	double sum;
 	int iter_num = 0;
@@ -108,49 +99,22 @@ int main() {
 			}
 			sum = pagerank_sum * 0.15 / url_num + 0.85 * sum;
 			delta += (pagerank[i] - sum) * (pagerank[i] - sum);
-			//double delta_abs = fabs(pagerank[i] - sum);
-			//delta = fmax(delta, delta_abs);
 			pagerank[i] = sum;
 		}
-		printf("%lf\n", delta);
 		if (delta <= precision * precision) {
 			break;
 		}
 	}
-	printf("iter_num=%d\n", iter_num);
-	/*while (x > precision * precision) {
-		iter_num++;
-		total = 0;
-		for (int i = 0; i < url_num; i++) {
-			r_last[i] = r[i];
-			r[i] = 0;
-			total += r_last[i];
-		}
-		for (int i = 0; i < Matrix_num; i++) {
-			r[Matrix_Row[i]] = Matrix_Value[i] * r_last[Matrix_Col[i]] + r[Matrix_Row[i]];
-		}
-		for (int i = 0; i < url_num; i++) {
-			r[i] = (1 - 0.15) * r[i];
-		}
-		for (int i = 0; i < url_num; i++) {
-			r[i] += total * lamda;
-		}
-		x = 0;
-		for (int i = 0; i < url_num; i++) {
-			x += (r_last[i] - r[i]) * (r_last[i] - r[i]);
-		}
-		printf("%.16f\n", x);
-	}*/
 	FindTop();
 	fclose(infile);
 	fopen_s(&outfile, "result.txt", "w");
 	for (int i = 0; i < 20; i++) {
 		fprintf(outfile, "%s %.16lf\n", url[top_id[i]], top_PageRank[i]);
 	}
-	printf("%d\n", iter_num);
 
 	end_time = clock();
 	cost_time = (double)(end_time - begin_time) / CLOCKS_PER_SEC;
-	printf("{runtime: %lf}", cost_time);
+	printf("{runtime: %lfs, iter_num: %d\n}", cost_time, iter_num);
+	sleep(3);
 	return 0;
 }

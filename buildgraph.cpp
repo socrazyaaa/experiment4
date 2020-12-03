@@ -5,15 +5,18 @@
 #include <time.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <iostream>
 
-#define HASHTABLE_SIZE 1000
+using namespace std;
+
+#define HASHTABLE_SIZE 12289
 
 struct Hash_node {
 	char* url;
 	int url_id;
 	struct Hash_node* next;
 };
-Hash_node* hash_table[1000];
+Hash_node* hash_table[HASHTABLE_SIZE];
 char* html = (char*)malloc(1);
 char* p;
 
@@ -83,6 +86,8 @@ int main() {
 	clock_t begin_time, end_time;
 	begin_time = clock();
 	double cost_time;
+
+	//system("DIR /D news.sohu.com /b /s /a:a > dir.txt");
     char basePath[300];
 
     FILE* dir_file;
@@ -90,7 +95,6 @@ int main() {
     ///get the current absoulte path
     memset(basePath,'\0',sizeof(basePath));
     getcwd(basePath, 299);
-    printf("the current dir is : %s\n",basePath);
 
     ///get the file list
     memset(basePath,'\0',sizeof(basePath));
@@ -103,8 +107,6 @@ int main() {
 	int length;
 	int url_offset;
 	int hash;
-	int node_num = 0;
-	int edge_num = 0;
 	Hash_node* temp;
 	fclose(dir_file);
 	dir_file = fopen("dir.txt", "r");
@@ -157,17 +159,15 @@ int main() {
 	const size_t nmatch = 2;
 	url_id = 0;
 	int n = 0;
-	int pre_length = 1;
+	int node_num = 0,edge_num = 0;
 	while (fgets(url, 300, web_url)) {
 		url[strlen(url) - 1] = '\0';
 		if (infile = fopen(url, "rb")) {
 			fseek(infile, 0L, SEEK_END);
 			html_length = ftell(infile);
 			fseek(infile, 0L, 0);
-			if (pre_length < html_length) {
-				html = (char*)realloc(html, html_length);
-				pre_length = html_length;
-			}
+			free(html);
+			html = (char*)malloc(html_length);
 			fread(html, 1, html_length, infile);
 			fclose(infile);
 			p = html;
@@ -192,7 +192,6 @@ int main() {
 
 	end_time = clock();
 	cost_time = (double)(end_time - begin_time) / CLOCKS_PER_SEC;
-	printf("{runtime: %lfs, node_num: %d, edge_num:%d\n}", cost_time, node_num, edge_num);
-	sleep(3);
+	printf("{runtime: %lfs ,node_num: %d,edge_num: %d}", cost_time, node_num, edge_num);
 	return 0;
 }
